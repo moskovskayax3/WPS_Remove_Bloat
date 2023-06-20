@@ -1112,7 +1112,6 @@ $WhitelistedApps = @(
 if (Test-Path "C:\Program Files\Lenovo\Ai Meeting Manager Service\") {
     Write-Host "AI Meeting Manager Service detected"
     Start-Process -FilePath "C:\Program Files\Lenovo\Ai Meeting Manager Service\unins000.exe" -Wait -ArgumentList "/SILENT"
-    Remove-Item 'C:\Program Files\Lenovo\Ai Meeting Manager Service\' -Recurse -ErrorAction SilentlyContinue
 }
 else {
     Write-Host "AI Meeting Manager Service not detected" -ForegroundColor Green
@@ -1121,7 +1120,6 @@ else {
 if (Test-Path "C:\Program Files\Lenovo\Lenovo Smart Appearance Components\") {
     Write-Host "Lenovo Smart Appearance Components detected"
     Start-Process -FilePath "C:\Program Files\Lenovo\Lenovo Smart Appearance Components\unins000.exe" -Wait -ArgumentList "/SILENT"
-    Remove-Item 'C:\Program Files\Lenovo\Lenovo Smart Appearance Components\' -Recurse -ErrorAction SilentlyContinue
 }
 else {
     Write-Host "AI Meeting Manager Service not detected" -ForegroundColor Green
@@ -1129,8 +1127,7 @@ else {
 
 if (Test-Path "C:\Program Files\Lenovo\SmartNote\") {
     Write-Host "SmartNote detected"
-    Start-Process -FilePath "C:\Program Files\Lenovo\SmartNote\unins000.exe" -Wait -ArgumentList "/SILENT"
-    Remove-Item 'C:\Program Files\Lenovo\Lenovo Smart Appearance Components\' -Recurse -ErrorAction SilentlyContinue
+    Start-Process -FilePath "C:\Program Files\Lenovo\SmartNote\unins000.exe" -Wait -ArgumentList "/SILENT /qn /force"
 }
 else {
     Write-Host "AI Meeting Manager Service not detected" -ForegroundColor Green
