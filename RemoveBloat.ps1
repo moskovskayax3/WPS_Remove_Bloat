@@ -1109,17 +1109,31 @@ $WhitelistedApps = @(
 "Lenovo Vantage Service"
 )
 
-$InstalledPrograms = Get-Package | Where-Object {(($_.Name -in $UninstallPrograms) -or ($_.Name -like "*Dell*")) -and ($_.Name -NotMatch $WhitelistedApps)}
-    # Remove installed programs
-$InstalledPrograms | ForEach-Object {
+if (Test-Path "C:\Program Files\Lenovo\Ai Meeting Manager Service\") {
+    Write-Host "AI Meeting Manager Service detected"
+    Start-Process -FilePath "C:\Program Files\Lenovo\Ai Meeting Manager Service\unins000.exe" -Wait -ArgumentList "/SILENT"
+    Remove-Item 'C:\Program Files\Lenovo\Ai Meeting Manager Service\' -Recurse -ErrorAction SilentlyContinue
+}
+else {
+    Write-Host "AI Meeting Manager Service not detected" -ForegroundColor Green
+}
 
-    Write-Host -Object "Attempting to uninstall: [$($_.Name)]..."
+if (Test-Path "C:\Program Files\Lenovo\Lenovo Smart Appearance Components\") {
+    Write-Host "Lenovo Smart Appearance Components detected"
+    Start-Process -FilePath "C:\Program Files\Lenovo\Lenovo Smart Appearance Components\unins000.exe" -Wait -ArgumentList "/SILENT"
+    Remove-Item 'C:\Program Files\Lenovo\Lenovo Smart Appearance Components\' -Recurse -ErrorAction SilentlyContinue
+}
+else {
+    Write-Host "AI Meeting Manager Service not detected" -ForegroundColor Green
+}
 
-    Try {
-        $Null = $_ | Uninstall-Package -AllVersions -Force -ErrorAction Stop
-        Write-Host -Object "Successfully uninstalled: [$($_.Name)]"
-    }
-    Catch {Write-Warning -Message "Failed to uninstall: [$($_.Name)]"}
+if (Test-Path "C:\Program Files\Lenovo\SmartNote\") {
+    Write-Host "SmartNote detected"
+    Start-Process -FilePath "C:\Program Files\Lenovo\SmartNote\unins000.exe" -Wait -ArgumentList "/SILENT"
+    Remove-Item 'C:\Program Files\Lenovo\Lenovo Smart Appearance Components\' -Recurse -ErrorAction SilentlyContinue
+}
+else {
+    Write-Host "AI Meeting Manager Service not detected" -ForegroundColor Green
 }
 }
 
