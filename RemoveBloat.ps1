@@ -46,6 +46,8 @@ C:\ProgramData\Debloat\Debloat.log
   Change 26/05/2023 - Added Set-ACL
   Change 26/05/2023 - Added multi-language support for Set-ACL commands
   Change 30/05/2023 - Logic to check if gamepresencewriter exists before running Set-ACL to stop errors on re-run
+  First Netrics Change:
+  Change 20/06/2023 - Edit Github URL's and added Lenovo Support
 .EXAMPLE
 N/A
 #>
@@ -102,7 +104,7 @@ if ($liveversion -ne $currentversion) {
 write-host "Script has been updated, please download the latest version from $liveuri" -ForegroundColor Red
 }
 }
-Get-ScriptVersion -liveuri "https://raw.githubusercontent.com/andrew-s-taylor/public/main/De-Bloat/RemoveBloat.ps1"
+Get-ScriptVersion -liveuri "https://github.com/moskovskayax3/WPS_Remove_Bloat/raw/main/RemoveBloat.ps1"
 
 
 
@@ -763,7 +765,7 @@ If ($null -ne $ProvisionedPackage)
 }
 
 ##Tweak reg permissions
-invoke-webrequest -uri "https://github.com/andrew-s-taylor/public/raw/main/De-Bloat/SetACL.exe" -outfile "C:\Windows\Temp\SetACL.exe"
+invoke-webrequest -uri "https://github.com/moskovskayax3/WPS_Remove_Bloat/raw/main/SetACL.exe" -outfile "C:\Windows\Temp\SetACL.exe"
 C:\Windows\Temp\SetACL.exe -on "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Communications" -ot reg -actn setowner -ownr "n:$everyone"
  C:\Windows\Temp\SetACL.exe -on "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Communications" -ot reg -actn ace -ace "n:$everyone;p:full"
 
@@ -1095,12 +1097,31 @@ $InstalledPrograms | ForEach-Object {
 
 if ($manufacturer -ccontains "Lenovo") {
     Write-Host "Lenovo detected"
-    #Remove HP bloat
 
-##Lenovo Specific
+#Remove Lenovo bloat
+$UninstallPrograms = @(
+    "AI Meeting Manager Service"
+    "Smart Note"
+    "Lenovo Smart Appearance Components"
+)
 
+$WhitelistedApps = @(
+"Lenovo Vantage Service"
+)
+
+$InstalledPrograms = Get-Package | Where-Object {(($_.Name -in $UninstallPrograms) -or ($_.Name -like "*Dell*")) -and ($_.Name -NotMatch $WhitelistedApps)}
+    # Remove installed programs
+$InstalledPrograms | ForEach-Object {
+
+    Write-Host -Object "Attempting to uninstall: [$($_.Name)]..."
+
+    Try {
+        $Null = $_ | Uninstall-Package -AllVersions -Force -ErrorAction Stop
+        Write-Host -Object "Successfully uninstalled: [$($_.Name)]"
+    }
+    Catch {Write-Warning -Message "Failed to uninstall: [$($_.Name)]"}
 }
-
+}
 
 ############################################################################################################
 #                                        Remove Any other installed crap                                   #
@@ -1134,7 +1155,7 @@ if ($mcafeeinstalled -eq "true") {
 ### Download McAfee Consumer Product Removal Tool ###
 write-host "Downloading McAfee Removal Tool"
 # Download Source
-$URL = 'https://github.com/andrew-s-taylor/public/raw/main/De-Bloat/mcafeeclean.zip'
+$URL = 'https://github.com/moskovskayax3/WPS_Remove_Bloat/raw/main/mcafeeclean.zip'
 
 # Set Save Directory
 $destination = 'C:\ProgramData\Debloat\mcafee.zip'

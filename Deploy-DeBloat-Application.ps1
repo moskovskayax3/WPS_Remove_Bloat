@@ -68,7 +68,7 @@ if ($liveversion -ne $currentversion) {
 write-host "Script has been updated, please download the latest version from $liveuri" -ForegroundColor Red
 }
 }
-Get-ScriptVersion -liveuri "https://raw.githubusercontent.com/andrew-s-taylor/public/main/De-Bloat/Deploy-DeBloat-Application.ps1"
+Get-ScriptVersion -liveuri "https://github.com/moskovskayax3/WPS_Remove_Bloat/raw/main/Deploy-DeBloat-Application.ps1"
 ##########################################################################################
 
 $ErrorActionPreference = "Continue"
@@ -1386,7 +1386,7 @@ $appid = "DeBloat"
 
 
 # Find the script
-$appurl = "https://raw.githubusercontent.com/andrew-s-taylor/public/main/De-Bloat/debloat-intune-script.ps1"
+$appurl = "https://github.com/moskovskayax3/WPS_Remove_Bloat/raw/main/debloat-intune-script.ps1"
 
 #Set the download location
 $output = $apppath + "\debloat-intune-script.ps1"
