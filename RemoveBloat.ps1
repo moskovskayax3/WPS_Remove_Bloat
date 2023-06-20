@@ -1095,7 +1095,7 @@ $InstalledPrograms | ForEach-Object {
 }
 
 
-if ($manufacturer -ccontains "Lenovo") {
+if ($manufacturer -like "*Lenovo*") {
     Write-Host "Lenovo detected"
 
 #Remove Lenovo bloat
