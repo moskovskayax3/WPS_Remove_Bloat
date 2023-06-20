@@ -1098,17 +1098,6 @@ $InstalledPrograms | ForEach-Object {
 if ($manufacturer -like "*Lenovo*") {
     Write-Host "Lenovo detected"
 
-#Remove Lenovo bloat
-$UninstallPrograms = @(
-    "AI Meeting Manager Service"
-    "Smart Note"
-    "Lenovo Smart Appearance Components"
-)
-
-$WhitelistedApps = @(
-"Lenovo Vantage Service"
-)
-
 if (Test-Path "C:\Program Files\Lenovo\Ai Meeting Manager Service\") {
     Write-Host "AI Meeting Manager Service detected"
     Start-Process -FilePath "C:\Program Files\Lenovo\Ai Meeting Manager Service\unins000.exe" -Wait -ArgumentList "/SILENT"
