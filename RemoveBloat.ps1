@@ -1119,7 +1119,7 @@ if (Test-Path "C:\Program Files\Lenovo\SmartNote\") {
     Start-Process -FilePath "C:\Program Files\Lenovo\SmartNote\unins000.exe" -Wait -ArgumentList "/SILENT /qn /force"
 }
 else {
-    Write-Host "AI Meeting Manager Service not detected" -ForegroundColor Green
+    Write-Host "SmartNote not detected" -ForegroundColor Green
 }
 }
 
