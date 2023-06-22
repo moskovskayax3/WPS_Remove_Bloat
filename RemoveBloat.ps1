@@ -48,6 +48,7 @@ C:\ProgramData\Debloat\Debloat.log
   Change 30/05/2023 - Logic to check if gamepresencewriter exists before running Set-ACL to stop errors on re-run
   First Netrics Change:
   Change 20/06/2023 - Edit Github URL's and added Lenovo Support
+  Change 22/06/2023 - Fix Lenovo Bloat removal
 .EXAMPLE
 N/A
 #>
