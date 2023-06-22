@@ -1168,7 +1168,8 @@ else {
 
 if (Test-Path "C:\Program Files\Lenovo\SmartNote\") {
     Write-Host "SmartNote detected"
-    Start-Process -FilePath "C:\Program Files\Lenovo\SmartNote\unins000.exe" -Wait -ArgumentList "/SILENT /SUPPRESSMSGBOXES"
+    Start-Process -FilePath "C:\Program Files\Lenovo\SmartNote\unins000.exe" -ArgumentList "/SILENT /SUPPRESSMSGBOXES"
+    Start-Sleep -Seconds 15 
     Stop-Process -Name "SmartNoteRegister" -Force
 }
 else {
