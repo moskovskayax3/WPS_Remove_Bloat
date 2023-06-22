@@ -1098,6 +1098,57 @@ $InstalledPrograms | ForEach-Object {
 if ($manufacturer -like "*Lenovo*") {
     Write-Host "Lenovo detected"
 
+    $UninstallPrograms = @(
+        "E0469640.SmartAppearance"
+        "E046963F.AIMeetingManager"
+        "E0469640.LenovoUtility"
+    )
+    
+    $WhitelistedApps = @(
+        "E046963F.LenovoSettingsforEnterprise"
+    )
+
+$InstalledPackages = Get-AppxPackage -AllUsers | Where-Object {(($_.Name -in $UninstallPrograms) -or ($_.Name -like "*Lenovo*")) -and ($_.Name -NotMatch $WhitelistedApps)}
+
+$ProvisionedPackages = Get-AppxProvisionedPackage -Online | Where-Object {(($_.Name -in $UninstallPrograms) -or ($_.Name -like "*Lenovo*")) -and ($_.Name -NotMatch $WhitelistedApps)}
+
+# Remove provisioned packages first
+ForEach ($ProvPackage in $ProvisionedPackages) {
+
+    Write-Host -Object "Attempting to remove provisioned package: [$($ProvPackage.DisplayName)]..."
+
+    Try {
+        $Null = Remove-AppxProvisionedPackage -PackageName $ProvPackage.PackageName -Online -ErrorAction Stop
+        Write-Host -Object "Successfully removed provisioned package: [$($ProvPackage.DisplayName)]"
+    }
+    Catch {Write-Warning -Message "Failed to remove provisioned package: [$($ProvPackage.DisplayName)]"}
+}
+
+# Remove appx packages
+ForEach ($AppxPackage in $InstalledPackages) {
+                                            
+    Write-Host -Object "Attempting to remove Appx package: [$($AppxPackage.Name)]..."
+
+    Try {
+        $Null = Remove-AppxPackage -Package $AppxPackage.PackageFullName -AllUsers -ErrorAction Stop
+        Write-Host -Object "Successfully removed Appx package: [$($AppxPackage.Name)]"
+    }
+    Catch {Write-Warning -Message "Failed to remove Appx package: [$($AppxPackage.Name)]"}
+}
+
+# Remove any bundled packages
+ForEach ($AppxPackage in $InstalledPackages) {
+                                            
+    Write-Host -Object "Attempting to remove Appx package: [$($AppxPackage.Name)]..."
+
+    Try {
+        $null = Get-AppxPackage -AllUsers -PackageTypeFilter Main, Bundle, Resource -Name $AppxPackage.Name | Remove-AppxPackage -AllUsers
+        Write-Host -Object "Successfully removed Appx package: [$($AppxPackage.Name)]"
+    }
+    Catch {Write-Warning -Message "Failed to remove Appx package: [$($AppxPackage.Name)]"}
+}
+
+# Remove .exe Programs
 if (Test-Path "C:\Program Files\Lenovo\Ai Meeting Manager Service\") {
     Write-Host "AI Meeting Manager Service detected"
     Start-Process -FilePath "C:\Program Files\Lenovo\Ai Meeting Manager Service\unins000.exe" -Wait -ArgumentList "/SILENT"
@@ -1111,12 +1162,12 @@ if (Test-Path "C:\Program Files\Lenovo\Lenovo Smart Appearance Components\") {
     Start-Process -FilePath "C:\Program Files\Lenovo\Lenovo Smart Appearance Components\unins000.exe" -Wait -ArgumentList "/SILENT"
 }
 else {
-    Write-Host "AI Meeting Manager Service not detected" -ForegroundColor Green
+    Write-Host "Lenovo Smart Appearance Components not detected" -ForegroundColor Green
 }
 
 if (Test-Path "C:\Program Files\Lenovo\SmartNote\") {
     Write-Host "SmartNote detected"
-    Start-Process -FilePath "C:\Program Files\Lenovo\SmartNote\unins000.exe" -Wait -ArgumentList "/SILENT /qn /force"
+    Start-Process -FilePath "C:\Program Files\Lenovo\SmartNote\unins000.exe" -Wait -ArgumentList "/SILENT /SUPPRESSMSGBOXES"
 }
 else {
     Write-Host "SmartNote not detected" -ForegroundColor Green
