@@ -49,6 +49,7 @@ C:\ProgramData\Debloat\Debloat.log
   First Netrics Change:
   Change 20/06/2023 - Edit Github URL's and added Lenovo Support
   Change 22/06/2023 - Fix Lenovo Bloat removal
+  Change 26/09/2023 - Update Lenovo removal
 .EXAMPLE
 N/A
 #>
@@ -1095,86 +1096,162 @@ $InstalledPrograms | ForEach-Object {
 
 }
 
-
-if ($manufacturer -like "*Lenovo*") {
+if ($manufacturer -like "Lenovo") {
     Write-Host "Lenovo detected"
+    ##Lenovo Specific
+    # Function to uninstall applications with .exe uninstall strings
+
+    function UninstallApp {
+
+        param (
+            [string]$appName
+        )
+
+        # Get a list of installed applications from Programs and Features
+        $installedApps = Get-ItemProperty HKLM:\Software\Wow6432Node\Microsoft\Windows\CurrentVersion\Uninstall\*,
+        HKLM:\Software\Microsoft\Windows\CurrentVersion\Uninstall\* |
+        Where-Object { $_.DisplayName -like "*$appName*" }
+
+        # Loop through the list of installed applications and uninstall them
+
+        foreach ($app in $installedApps) {
+            $uninstallString = $app.UninstallString
+            $displayName = $app.DisplayName
+            Write-Host "Uninstalling: $displayName"
+            Start-Process $uninstallString -ArgumentList "/VERYSILENT" -Wait
+            Write-Host "Uninstalled: $displayName" -ForegroundColor Green
+        }
+    }
+
+    ##Stop Running Processes
+
+    $processnames = @(
+    "SmartAppearanceSVC.exe"
+    "UDClientService.exe"
+    "ModuleCoreService.exe"
+    "ProtectedModuleHost.exe"
+    "*lenovo*"
+    "FaceBeautify.exe"
+    "McCSPServiceHost.exe"
+    "mcapexe.exe"
+    "MfeAVSvc.exe"
+    "mcshield.exe"
+    "Ammbkproc.exe"
+    "AIMeetingManager.exe"
+    "DADUpdater.exe"
+    )
+
+    foreach ($process in $processnames) {
+        write-host "Stopping Process $process"
+        Get-Process -Name $process | Stop-Process -Force
+        write-host "Process $process Stopped"
+    }
 
     $UninstallPrograms = @(
-        "E0469640.SmartAppearance"
         "E046963F.AIMeetingManager"
+        "E0469640.SmartAppearance"
+        "MirametrixInc.GlancebyMirametrix"
+        "E046963F.LenovoCompanion"
         "E0469640.LenovoUtility"
     )
     
-    $WhitelistedApps = @(
-        "E046963F.LenovoSettingsforEnterprise"
-    )
-
-$InstalledPackages = Get-AppxPackage -AllUsers | Where-Object {(($_.Name -in $UninstallPrograms) -or ($_.Name -like "*Lenovo*")) -and ($_.Name -NotMatch $WhitelistedApps)}
-
-$ProvisionedPackages = Get-AppxProvisionedPackage -Online | Where-Object {(($_.Name -in $UninstallPrograms) -or ($_.Name -like "*Lenovo*")) -and ($_.Name -NotMatch $WhitelistedApps)}
-
-# Remove provisioned packages first
-ForEach ($ProvPackage in $ProvisionedPackages) {
-
-    Write-Host -Object "Attempting to remove provisioned package: [$($ProvPackage.DisplayName)]..."
-
-    Try {
-        $Null = Remove-AppxProvisionedPackage -PackageName $ProvPackage.PackageName -Online -ErrorAction Stop
-        Write-Host -Object "Successfully removed provisioned package: [$($ProvPackage.DisplayName)]"
+    
+    $InstalledPackages = Get-AppxPackage -AllUsers | Where-Object {(($_.Name -in $UninstallPrograms))}
+    
+    $ProvisionedPackages = Get-AppxProvisionedPackage -Online | Where-Object {(($_.Name -in $UninstallPrograms))}
+    
+    $InstalledPrograms = Get-Package | Where-Object {(($_.Name -in $UninstallPrograms))}
+    # Remove provisioned packages first
+    ForEach ($ProvPackage in $ProvisionedPackages) {
+    
+        Write-Host -Object "Attempting to remove provisioned package: [$($ProvPackage.DisplayName)]..."
+    
+        Try {
+            $Null = Remove-AppxProvisionedPackage -PackageName $ProvPackage.PackageName -Online -ErrorAction Stop
+            Write-Host -Object "Successfully removed provisioned package: [$($ProvPackage.DisplayName)]"
+        }
+        Catch {Write-Warning -Message "Failed to remove provisioned package: [$($ProvPackage.DisplayName)]"}
     }
-    Catch {Write-Warning -Message "Failed to remove provisioned package: [$($ProvPackage.DisplayName)]"}
-}
-
-# Remove appx packages
-ForEach ($AppxPackage in $InstalledPackages) {
-                                            
-    Write-Host -Object "Attempting to remove Appx package: [$($AppxPackage.Name)]..."
-
-    Try {
-        $Null = Remove-AppxPackage -Package $AppxPackage.PackageFullName -AllUsers -ErrorAction Stop
-        Write-Host -Object "Successfully removed Appx package: [$($AppxPackage.Name)]"
+    
+    # Remove appx packages
+    ForEach ($AppxPackage in $InstalledPackages) {
+                                                
+        Write-Host -Object "Attempting to remove Appx package: [$($AppxPackage.Name)]..."
+    
+        Try {
+            $Null = Remove-AppxPackage -Package $AppxPackage.PackageFullName -AllUsers -ErrorAction Stop
+            Write-Host -Object "Successfully removed Appx package: [$($AppxPackage.Name)]"
+        }
+        Catch {Write-Warning -Message "Failed to remove Appx package: [$($AppxPackage.Name)]"}
     }
-    Catch {Write-Warning -Message "Failed to remove Appx package: [$($AppxPackage.Name)]"}
-}
-
-# Remove any bundled packages
-ForEach ($AppxPackage in $InstalledPackages) {
-                                            
-    Write-Host -Object "Attempting to remove Appx package: [$($AppxPackage.Name)]..."
-
-    Try {
-        $null = Get-AppxPackage -AllUsers -PackageTypeFilter Main, Bundle, Resource -Name $AppxPackage.Name | Remove-AppxPackage -AllUsers
-        Write-Host -Object "Successfully removed Appx package: [$($AppxPackage.Name)]"
+    
+    # Remove any bundled packages
+    ForEach ($AppxPackage in $InstalledPackages) {
+                                                
+        Write-Host -Object "Attempting to remove Appx package: [$($AppxPackage.Name)]..."
+    
+        Try {
+            $null = Get-AppxPackage -AllUsers -PackageTypeFilter Main, Bundle, Resource -Name $AppxPackage.Name | Remove-AppxPackage -AllUsers
+            Write-Host -Object "Successfully removed Appx package: [$($AppxPackage.Name)]"
+        }
+        Catch {Write-Warning -Message "Failed to remove Appx package: [$($AppxPackage.Name)]"}
     }
-    Catch {Write-Warning -Message "Failed to remove Appx package: [$($AppxPackage.Name)]"}
-}
+    
+    
+    # Remove installed programs
+    $InstalledPrograms | ForEach-Object {
+    
+        Write-Host -Object "Attempting to uninstall: [$($_.Name)]..."
+    
+        Try {
+            $Null = $_ | Uninstall-Package -AllVersions -Force -ErrorAction Stop
+            Write-Host -Object "Successfully uninstalled: [$($_.Name)]"
+        }
+        Catch {Write-Warning -Message "Failed to uninstall: [$($_.Name)]"}
+    }
 
-# Remove .exe Programs
-if (Test-Path "C:\Program Files\Lenovo\Ai Meeting Manager Service\") {
-    Write-Host "AI Meeting Manager Service detected"
-    Start-Process -FilePath "C:\Program Files\Lenovo\Ai Meeting Manager Service\unins000.exe" -Wait -ArgumentList "/SILENT"
-}
-else {
-    Write-Host "AI Meeting Manager Service not detected" -ForegroundColor Green
-}
+    # Get Lenovo Vantage service uninstall string to uninstall service
+    $lvs = Get-ItemProperty "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\*", "HKLM:\Software\Wow6432Node\Microsoft\Windows\CurrentVersion\Uninstall\*" | Where-Object DisplayName -eq "Lenovo Vantage Service"
+    if (!([string]::IsNullOrEmpty($lvs.QuietUninstallString))) {
+        $uninstall = "cmd /c " + $lvs.QuietUninstallString
+        Write-Host $uninstall
+        Invoke-Expression $uninstall
+    }
 
-if (Test-Path "C:\Program Files\Lenovo\Lenovo Smart Appearance Components\") {
-    Write-Host "Lenovo Smart Appearance Components detected"
-    Start-Process -FilePath "C:\Program Files\Lenovo\Lenovo Smart Appearance Components\unins000.exe" -Wait -ArgumentList "/SILENT"
-}
-else {
-    Write-Host "Lenovo Smart Appearance Components not detected" -ForegroundColor Green
-}
+    # Uninstall Lenovo Smart
+    UninstallApp -appName "Lenovo Smart"
 
-if (Test-Path "C:\Program Files\Lenovo\SmartNote\") {
-    Write-Host "SmartNote detected"
-    Start-Process -FilePath "C:\Program Files\Lenovo\SmartNote\unins000.exe" -ArgumentList "/SILENT /SUPPRESSMSGBOXES"
-    Start-Sleep -Seconds 15 
-    Stop-Process -Name "SmartNoteRegister" -Force
-}
-else {
-    Write-Host "SmartNote not detected" -ForegroundColor Green
-}
+    # Uninstall Ai Meeting Manager Service
+    UninstallApp -appName "Ai Meeting Manager"
+
+    # Uninstall ImController service
+    Invoke-Expression -Command 'cmd.exe /c "c:\windows\system32\ImController.InfInstaller.exe" -uninstall'
+
+    # Remove vantage associated registry keys
+    Remove-Item 'HKLM:\SOFTWARE\Policies\Lenovo\E046963F.LenovoCompanion_k1h2ywk1493x8' -Recurse -ErrorAction SilentlyContinue
+    Remove-Item 'HKLM:\SOFTWARE\Policies\Lenovo\ImController' -Recurse -ErrorAction SilentlyContinue
+    Remove-Item 'HKLM:\SOFTWARE\Policies\Lenovo\Lenovo Vantage' -Recurse -ErrorAction SilentlyContinue
+    Remove-Item 'HKLM:\SOFTWARE\Policies\Lenovo\Commercial Vantage' -Recurse -ErrorAction SilentlyContinue
+
+     # Uninstall AI Meeting Manager Service
+     Invoke-Expression -Command 'cmd.exe /c "C:\Program Files\Lenovo\Ai Meeting Manager Service\unins000.exe" /SILENT'
+
+    # Uninstall Lenovo Vantage
+    Invoke-Expression -Command 'cmd.exe /c "C:\Program Files (x86)\Lenovo\VantageService\3.13.43.0\Uninstall.exe" /SILENT'
+
+    ##Uninstall Smart Appearance
+    Invoke-Expression -Command 'cmd.exe /c "C:\Program Files\Lenovo\Lenovo Smart Appearance Components\unins000.exe" /SILENT'
+
+
+
+    # Remove Lenovo Now
+    Set-Location "c:\program files (x86)\lenovo\lenovowelcome\x86"
+
+    # Update $PSScriptRoot with the new working directory
+    $PSScriptRoot = (Get-Item -Path ".\").FullName
+    invoke-expression -command .\uninstall.ps1
+
+    Write-Host "All applications and associated Lenovo components have been uninstalled." -ForegroundColor Green
 }
 
 ############################################################################################################
@@ -1269,7 +1346,6 @@ foreach($obj in $InstalledSoftware){
      }
 
      }
-
 
 $InstalledSoftware32 = Get-ChildItem "HKLM:\Software\WOW6432NODE\Microsoft\Windows\CurrentVersion\Uninstall"
 foreach($obj32 in $InstalledSoftware32){
